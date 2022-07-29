@@ -155,9 +155,9 @@ Here's an illustration of four of the most common ways
   - So all the features will range from `[0, 1]`. 
   - This mostly makes sense **if there are actually minimum and maximum values in your data set**. If it's actually Gaussian distribution, the scaling might not make a lot of sense, because if you add one more data point, it's very far away and it will cram(squeeze) all the other data points more together. This will make sense if you have a grayscale value within `[0, 255]` or something else that has like clearly defined boundaries. 
 - **RobustScaler**.: 
-  - It’s the robust version of the `**StandardScaler**`. It computes the `median` and the `qurtiles`. 
-  - $X = \frac{X- X~median~}{p~75~ - p~25~}$
-  - **Cons** : This **cannot be skewed by outliers**. The StandardScaler uses `**mean**` and `**standard deviation**` . So if you have a point that’s very far away, it can have unlimited influence on the mean. The `**RobustScaler**` uses robust statistics, so it’s not skewed by outliers. 
+  - It’s the robust version of the `StandardScaler`. It computes the `median` and the `qurtiles`. 
+  - $X = \frac{X- Xmedian}{p75 - p25}$
+  - **Cons** : This **cannot be skewed by outliers**. The StandardScaler uses `mean` and `standard deviation` . So if you have a point that’s very far away, it can have unlimited influence on the mean. The `RobustScaler` uses robust statistics, so it’s not skewed by outliers. 
 - **Normalizer**: 
   - It makes sure that vectors have length one either in `L1` norm or `L2` norm. 
     - If you do this for `L2` norm, it means you don't care about the length you project on a **circle**. 
