@@ -13,6 +13,9 @@
     - [Non-linear transformation](#non-linear-transformation)
     - [Discretization](#discretization)
     - [Imputation](#imputation)
+- [Unsupervised Algorithms](#Unsupervised-Algorithms)
+  - [Clustering](#Clustering)
+
 - [Linear Models](#linear-models)
   - [Linear Regression](#linear-regression)
     - [LR(OLS)](#lrols)
@@ -69,14 +72,14 @@
     - [Gradient Boosting Advantages](#gradient-boosting-advantages)
     - [Tuning Gradient Boosting](#tuning-gradient-boosting)
     - [Q&A](#qa-3)
-  - [*XGBoost](#xgboost)
+  - [XGBoost](#xgboost)
     - [Overeview](#overeview-5)
     - [Recap](#recap)
     - [Objective Function](#objective-function)
     - [Tree Model Parameterization](#tree-model-parameterization)
       - [Tree definition](#tree-definition)
       - [Define Complexity of a Tree](#define-complexity-of-a-tree)
-    - [*Spliting Algorithm](#spliting-algorithm)
+    - [Spliting Algorithm](#spliting-algorithm)
     - [Engineering Details](#engineering-details)
     - [Summary](#summary)
   - [LightGBM](#lightgbm)
@@ -97,7 +100,7 @@
   - [Topic Model](#topic-model)
 - [Dimension Reduction](#dimension-reduction)
 - [Model Evaluation](#model-evaluation)
-  - [**Metrics](#metrics)
+  - [Metrics](#metrics)
     - [Metrics for Binary Classification](#metrics-for-binary-classification)
       - [Confusion Matrix](#confusion-matrix)
       - [Precision-Recall Curve](#precision-recall-curve)
@@ -129,6 +132,9 @@
   - [Other methods](#other-methods)
   - [Synthetic Minority Oversampling Technique (SMOTE)](#synthetic-minority-oversampling-technique-smote)
     - [Overeview](#overeview-11)
+- [Optimization](#Optimization)
+  - [Gradient Descent](#Gradient-Descent)
+
 
 <br>
 
@@ -148,7 +154,6 @@ Here's an illustration of four of the most common ways
 
 - **StandardScaler**: 
   - It **subtracts the mean and divides by standard deviation**. Making all the features have a zero mean and a standard deviation of one.
-  - 
   - **Cons**: it won't guarantee any minimum or maximum values. The range can be arbitrarily large.
 - **MinMaxScaler**: 
   - It **subtracts minimum and divides by range**. Scales between 0 and 1. 
@@ -157,13 +162,14 @@ Here's an illustration of four of the most common ways
 - **RobustScaler**.: 
   - It’s the robust version of the `StandardScaler`. It computes the `median` and the `qurtiles`. 
   - $X = \frac{X- Xmedian}{p75 - p25}$
-  - **Cons** : This **cannot be skewed by outliers**. The StandardScaler uses `mean` and `standard deviation` . So if you have a point that’s very far away, it can have unlimited influence on the mean. The `RobustScaler` uses robust statistics, so it’s not skewed by outliers. 
+  - **cons** : This **cannot be skewed by outliers**. The StandardScaler uses `mean` and `standard deviation` . So if you have a point that’s very far away, it can have unlimited influence on the mean. The `RobustScaler` uses robust statistics, so it’s not skewed by outliers. 
 - **Normalizer**: 
   - It makes sure that vectors have length one either in `L1` norm or `L2` norm. 
     - If you do this for `L2` norm, it means you don't care about the length you project on a **circle**. 
     - More commonly used in `L1` norm, it projects onto the **diamond**. It means you make sure **the sum of all the entries is one**. That's often used if you have histograms or if you have counts of things. If you want to make sure that you have frequency features instead of count features, you can use the `L1` normalizer.
     - designed for the row (sample) not cols (features), **typically used for (word) embeddings**
-    - The goal is to make sure, when calculate the dot product between features, they will have the similar range, ie, onvert to `unit vectorc`. 
+    - The goal is to make sure, when calculate the dot product between features, they will have the similar range, ie, onvert to `unit vectorc`.
+    - $x = \frac{x-Xmean}{max(x)-min(x)}$
 
 **Sparse Data** 
 
@@ -180,9 +186,9 @@ Here's an illustration of four of the most common ways
 from sklearn.preprocessing import StandardScaler
 StandardScaler().fit_transform(data)
 ```
-- Models that need Standardization: Adaboost, SVM, LR, KNN, KMeans
+- Models that need Standardization- most **Linear**: Adaboost, SVM, LR, KNN, KMeans
 - Models that don't need Standardization: DTree, RandomForest
-  - For Tree models, value exploding or vanishing don't affect the split position, because every step is based on feature values, even though we standardize or not, the ranking of the features won't change, so that split position won't change
+  - For Tree models, value exploding or vanishing don't affect the split position, because every step is based on feature values, no matter we standardize or not, the ranking of the features won't change, so that split position won't change
   
 
 <br>
@@ -249,6 +255,13 @@ pipe.score(X_test, y_test)
 #### Overeview
 - `one-hot(dummy) encodin`: no order within the feature，`#category < 4`; 
   - For **high-cardinality** categorical feature, 编码之后特征空间过大（可以考虑PCA降维），而且由于one-hot feature 比较unbalanced，树模型里每次的切分增益较小，树模型通常需要grow very deep才能得到不错的精度
+  - For some cases, number of unique categories in test and train sets might vary, should use 
+  
+    - ```python
+      train = pd.get_dummies(train)   # gives (1451, 221)  
+      test = pd.get_dummies(test)    # gives (1459, 206)  
+      final_train, final_test = train.align(test, join='inner', axis=1)  # inner join
+      ```
   - In more practical use cases, especially NN related cases, people would typically use **one-hot + encoders** to project the one hot encoder into low dimensional dense space. 
     - For instance, classical **word2vec** embedding use a reconstruction task to train a low dimensional representation of word one-hot vector. 
     - Another way is like LDA and `GloVE`, to use a global co-occurance information combined with PCA/SVD method to reduce the dimension.
@@ -301,7 +314,24 @@ preprocess = make_column_transformer(
 model = make_pipeline(preprocess, LogisticRegression)
 ```
 
+#### Feature Hashing
+
+Maps an object to one of m buckets.
+
+Pros:
+
+​	Reduce dimension
+
+​	Fast Computing
+
+Cons:
+
+​	different categories might collide / map to the same bucket
+
+
+
 #### Target-Based Encoding
+
 - For high cardinality categorical features
   - Example: US states, given low samples
 - Instead of 50 one-hot variables, one “response encoded” variable.
@@ -360,8 +390,6 @@ For example, if you have `categorical feature` it's all US states and you don't 
   - The skewness of a function is a measure of the asymmetry of a function
     - `0` for functions that are symmetric around their `mean`. 
 - Unfortunately the `Box-Cox transformation` is only applicable to **positive features**.
-
-<img src="imgs/box-cox-transform.png" width = "520" height = "220">
 
 <br>
 
@@ -478,7 +506,60 @@ np.mean(scores)
 
 <br>
 
+
+
+# Unsupervised Algorithms
+
+## Clustering
+
+Clustering is a Machine Learning technique that involves the grouping of data points. Given a set of data points, we can use a clustering algorithm to classify each data point into a specific group.
+
+ In theory, data points that are in the same group should have similar properties and/or features, while data points in different groups should have highly dissimilar properties and/or features. 
+
+### K-means Clustering
+
+**How does it work**
+
+We want to add k new points to the data we have, each one of those points is call centroid, will be going around and trying to find a center in the middle of the k clusters we have. Algorithm stops when the points stop moving
+
+**Hyperparameter:** k – number of clusters we want
+
+**Steps:**
+
+Assign initial values to each cluster 
+
+Repeat: assign each point from training to each cluster that is closest to it in mean, recalculate the mean of each cluster
+
+If all clusters’ mean stop changing, algorithm stops
+
+**pro**: 
+
+- easy to implement and tune with hyper parameter k. 
+- it guarantees convergence and easily adapt to new examples
+- low computational cost
+- Fast
+
+**cons**: 
+
+- Centroids can be dragged by outliers, or outliers might get their own cluster instead of being ignored. 
+- K-means algorithm can be performed in numerical data only.
+
+`K-Medians` is another clustering algorithm related to K-Means, except instead of recomputing the group center points using the mean we use the **median*** vector of the group.* This method is less sensitive to outliers** (because of using the Median) but is **much slower for larger datasets** as sorting is required on each iteration when computing the Median vector.
+
+
+
+### Mean-Shift Clustering
+
+https://towardsdatascience.com/the-5-clustering-algorithms-data-scientists-need-to-know-a36d136ef68
+
+
+
+
+
+
+
 # Linear Models
+
 ## Linear Regression
 A supervised machine learning algorithm that looking for the linear relationship between the dependent variable and features. Our question is : which linear relationship can best describe the data points.
 
@@ -548,6 +629,7 @@ $$
 \min _{w \in \mathbb{R}^{p}, b \in \mathbb{R}} \sum_{i=1}^{n}\left\|w^{T} \mathbf{x}_{i}+b-y_{i}\right\|^{2}+\alpha\|w\|_{1}
 $$
 - **The L2 norm penalizes very large coefficients more, the L1 norm penalizes all coefficients equally**
+- Practically, L1 tends to shrink coefficients to zero, whereas L2 tends to shrink coefficients evenly. So when we want to drop features or do feature selection, we use **L1 instead of L2**
 - This model does `features selection`(shrinks some $w_i$ to 0) together with prediction.
 
 **Caveat for Lasso**
@@ -566,10 +648,7 @@ $$
 
 Generally, ridge helps generalization. So it's a good idea to have the ridge penalty in there, but also maybe if there are some features that are really not useful, the L1 penalty helps makes the same exactly zero.
 
-In scikit-learn, you have a parameter `alpha`, which is the amount of regularization and then there's a parameter called `l1_ratio`, that says how much of the penalty should be L1 and L2. 
-- If `l1_ratio ` 1`, you have `Lasso`, 
-- If `l1_ratio ` 0`, you have `Ridge`.
-- Don't use Lasso or Ridge and set `alpha=0`, because the solver will not handle it well. If you actually want `alpha=0`, use linear regression...
+
 
 <br>
 
@@ -602,9 +681,16 @@ $$
 \mathrm{SSE}=\sum_{i=1}^{n}\left(y_{i}-f\left(x_{i}\right)\right)^{2}
 $$
 - SSE is highly sensitive to number of data points.
-- MSE: Mean Squared Errors
-- MAE: Mean Absolute Error
-- RMSE: Root Square of Mean Squared Errors
+
+**We use absolute/squared values of the distances between predictions and labels to deal with negative errors**
+
+- MSE: Mean Squared Errors -> dealing with large error values
+
+- MAE: Mean Absolute Error -> more robust to outliers
+
+- RMSE: Root Square of Mean Squared Errors -> dealing with large error values
+
+We generally use RMSE instead of MSE because MSE calculates a number with a squared unit, for example, when we try to predict price, if we yield a number in $2, it won't make sense
 
 **$R^2$**
 $$
@@ -628,7 +714,7 @@ $$
 $$
 \bar{R}^{2}=1-\left(1-R^{2}\right) \frac{n-1}{n-p-1}
 $$
-- It calculates the proportion of the variation in the dependent variable accounted by the explanatory variables. 
+- It calculates the **proportion of the variation in the dependent variable accounted by the explanatory variables.**
 - It incorporates the model’s degrees of freedom. 
 - Adjusted $R^2$ will decrease as predictors are added if the increase in model fit does not make up for the loss of degrees of freedom. Likewise, it will increase as predictors are added if the increase in model fit is worthwhile. 
 - **Adjusted $R^2$ should always be used with models with more than one predictor variable**. It is interpreted as the proportion of total variance that is explained by the model. **It would only increase if an additional variable improves the accuracy of mode**
@@ -639,6 +725,7 @@ $$
   - If you want something that is independent of the units of the output, $R^2$ is pretty good because you know it's going to be between [0, 1]
 - Choose MSE/MAE: 
   - If you want something that is in **the units of the output**, MSE is good or MAE might even be better.
+  - **MAE is less biased for higher values**. It may not adequately reflect the performance when dealing with large error values. MSE is highly biased for higher values. RMSE is better in terms of reflecting performance when dealing with large error values
 
 <br>
 
@@ -661,7 +748,8 @@ LR is a supervised machine learning algorithm that can be used to model the prob
 
 **MLE**
 - assume data follows **Bernoulli distribution**
-- maximize log likelihood function (MLE) = minimize log loss (BCE loss)
+- maximize log likelihood function (MLE) = **minimize log loss** (BCE loss)
+- In Maximum Likelihood Estimation, a probability distribution for the target variable (class label) is assumed and then a likelihood function is defined that calculates the probability of observing the outcome given the input data and the model. This function can then be optimized to find the set of parameters that results in the largest sum likelihood over the training dataset.
 
 **Loss function**
 
@@ -694,7 +782,6 @@ $$
 
     When y = 1: L = -log(y_hat), since we want L to be small, that means we want log(y_hat) to be large, that means we want y_hat to be large, -> close to 1
 
-     
   - **NOTE**: $y_i = -1\ or \ 1 \Rightarrow \text{Log loss} = \sum_{i=1}^{n} \log \left(1 + \exp \left(-y_{i}\left(w^{T} \mathbf{x}_{i}+b\right)\right)\right)$
 - Both `Hinge loss` and `Log loss` are upper bounds on the `0-1 loss` but they are **convex and continuous**. 
 - Both of them care not only that you make a correct prediction, but also **"how correct" your prediction is**, i.e. how positive or negative your decision function is
@@ -707,6 +794,7 @@ $$
 \end{aligned}
 $$
 - **NOTE**: $y_i = -1\ or \ 1$
+- Note: regularization term is not inside of the log function
 - **Smaller $C$** (a lot of regularization) **limits the influence of individual points**, bigger regularization
 
 <br>
@@ -734,14 +822,21 @@ $$
 
 ## Overeview
 - Separates data between two classes by **maximizing the margin** between the `hyperplane` and the **nearest data points** of any class(`suport vectors`):
+- The objective of the support vector machine algorithm is to find a hyperplane in an N-dimensional space(N — the number of features) that distinctly classifies the data points.
 
-<img src="imgs/SVM.png" width = "400" height = "200">
+<img src="../MLE:AS interview/imgs/Screen Shot 2022-08-20 at 11.37.47 PM.png" alt="Screen Shot 2022-08-20 at 11.37.47 PM" height= "50%" width = "50%" />
+
+#### Difference between SVM and Logistic Regression
+
+In `logistic regression`, we take the output of the linear function and squash the value within the range of [0,1] using the sigmoid function. If the squashed value is greater than a threshold value(0.5) we assign it a label 1, else we assign it a label 0. 
+
+In `SVM`, we take the output of the linear function and if that output is greater than 1, we identify it with one class and if the output is -1, we identify is with another class. Since the threshold values are changed to 1 and -1 in SVM, we obtain this reinforcement range of values([-1,1]) which acts as margin.
 
 <br>
 
 ## Max-Margin and Support Vectors
 
-<img src="imgs/SVM_eg1.png" width = "400" height = "300">
+
 
 <br>
 
@@ -749,9 +844,9 @@ $$
 J_{\text {hinge }}=\sum_{i=1}^{N} \max \left(0,1-\operatorname{sgn}\left(y_{i}\right) p_{i}\right)
 $$
 
-- Orange line is better, which achieves **Max-Margin**
 - **Support Vectors**: **Data points within the margin** which determines the loss -- misclassified data points
   - the **size of the margin** is the **inverse of the length of $w$**
+
 $$
 \begin{gathered}
 \min _{w \in \mathbb{R}^{p}, b \in \mathbb{R}} C \sum_{i=1}^{n} \max \left(0, 1-y_{i}\left(w^{T} \mathbf{x}+b\right)\right)+\|w\|_{2}^{2} \\
@@ -766,8 +861,6 @@ $$
   - 看着似乎有点相反的感觉。。。但其实二者出发点就不一样：
     - `Logistic Regression`: **avoid outlier/extreme data points** affecting the decision boundary
     - `SVM`: more support vectors means less chance our decision boundary **only rely on a few points**
-
-<img src="imgs/SVM_C.png" width = "600" height = "250">
 
 <br>
 
@@ -996,25 +1089,34 @@ $$
 # KNN
 - https://github.com/NLP-LOVE/ML-NLP/tree/master/Machine%20Learning/9.%20KNN
 
+- K-nearest neighbors (KNN) is a type of supervised learning algorithm used for both regression and classification. KNN tries to predict the correct class for the test data by calculating the distance between the test data and all the training points. Then select the K number of points which is closet to the test data. The KNN algorithm calculates the probability of the test data belonging to the classes of ‘K’ training data and class holds the highest probability will be selected. In the case of regression, the value is the mean of the ‘K’ selected training points.
+
+  <img src="imgs/Screen Shot 2022-07-30 at 12.46.19 AM.png" alt="Screen Shot 2022-07-30 at 12.46.19 AM" style="zoom:50%;" />
 
 ## Overeview
+
 - **`Non-parametric` method** that calculates $\hat{y}$ using the **average** value or **most common** class of its K-Nearest Neighbors 
 - For high-dimensional data, information is lost through equidistant vectors, so dimension reduction is often applied prior to KNN
   
 
 **Minkowski Distance**: $\left(\sum\left|a_{i}-b_{i}\right|^{p}\right)^{1 / p}$
+
 - $p=1$ gives Manhattan distance $\sum\left|a_{i}-b_{i}\right|$
 - $p=2$ gives Euclidean distance $\sqrt{\sum\left(a_{i}-b_{i}\right)^{2}}$
 
 **Hamming Distance**: count of the differences between two vectors, often used to compare `categorical` variables
 
 **K值选择**
-- 如果选择较小的K值，就相当于用较小的领域中的训练实例进行预测，“学习”近似误差会减小，只有与输入实例较近或相似的训练实例才会对预测结果起作用，与此同时带来的问题是“学习”的估计误差会增大，换句话说，**K值的减小就意味着整体模型变得复杂，容易发生过拟合**；
-- 如果选择较大的K值，就相当于用较大领域中的训练实例进行预测，其优点是可以减少学习的估计误差，但缺点是学习的近似误差会增大。这时候，与输入实例较远（不相似的）训练实例也会对预测器作用，使预测发生错误，且**K值的增大就意味着整体的模型变得简单**。
-  - K = N，则完全不足取，因为此时无论输入实例是什么，都只是简单的预测它属于在训练实例中最多的累，模型过于简单，忽略了训练实例中大量有用信息。
-- 在实际应用中，K值一般取一个比较小的数值，例如采用交叉验证法来选择最优的K值。
+
+- if k is too small -> complex model, overfitting, high variance
+- if k is too large -> simple model, underfitting, high bias
+- optimal k usually is $sqrt(n)$
+- We can also use cross validation to find the optimal k
+  - Start with K=1, run cross validation (5 to 10 fold), measure the accuracy and keep repeating till the results become consistent. 
+
 
 **KNN最近邻分类算法的过程**
+
 - 计算测试样本和训练样本中每个样本点的距离
 - 对上面所有的距离值进行排序；
 - 选**前 K 个最小距离的样本**；
@@ -1099,17 +1201,28 @@ $$
 ### Classification Tree
 **Training Process**
 - Usually, for classification we have continuous features and so the questions are thresholds on a single feature.
-  - what about categorical features ???
+  - what about categorical features ?
     - `OneHotEncoding`: is X_a 0 or 1?
     - 划分应该是不在乎feature到底是离散还是连续，实际上离散的feature的划分是更早完成的（ID3）, CART对cardinity为k的feature进行k种划分：每次分为两支，一种取值为一支，其余取值为一支，最后在所有划分中选择最优的那一个。所以不必进行 `OneHotEncoding`
+  
 - **How to split the tree node?**
   - find the **best feature** and the **best threshold** to **minimize impurity(Gini index)**, which means it tries to make the resulting subsets to be as pure as possible (to consist mostly of one class)
+  
   - Once we find this split, we can then basically apply this algorithm recursively to the two subsets that the split created
+  
   - take an example with Gini Impurity:
     - 1. we choose one split option, calculate the Gini for each leaf, then calculate the total Gini impurity as the weighted sum of Gini. $The\ weights\ for\ each\ leaf = {num\ of\ data\ points\ in\ a\ leaf\ }/ {num\ of\ data\ points\ in \ total}$
+      
       2. we calculate the gini for all different splits
-      3. The we get the output value for each leaf, by most votes for **classiication**, by mean/median for **regression**
+      
+         For continuous feature, such as age, we calculate the gini for each average of two values, and choose the average with the lowest gini as the **threshold**
+      
+      3. Choose the split with the **Lowest gini index**
+      
+      4. The we get the output value for each leaf, by most votes for **classiication**, by mean/median for **regression**
+  
 - Each node corresponds to a split and the leaves correspond to labels
+
 - All tree building algorithms start **greedily** building a tree, they don't really go back and revisit because it would be too computationally expensive.
 
 **Criteria (for classification)**
@@ -1140,6 +1253,12 @@ $$
 <br>
 
 ### Regression Tree
+
+<img src="imgs/Screen Shot 2022-08-21 at 12.48.59 PM-1100579.png" alt="Screen Shot 2022-08-21 at 12.48.59 PM" height = "50%" width = "50%" />
+
+When we have non-linear data, we can't simply use Linear Regression to model our data because it can't represent our non-linear relationship. That's when we need a Tree model.
+
+Unlike Classification Tree, Regression Tree has numeric values in each leaf
 
 **Prediction**: usually the mean over the target targets in a `leaf`
 $$
@@ -1188,7 +1307,7 @@ tree_dot = plot_tree(tree, feature_names=cancer. feature_names)
 ### Hyper-Parameters Tuning
 Most of the tree growing algorithms are **greedy**. There are two ways to restrict the growth of the tree after you train them. They are `pre-pruning` and `post-pruning`
 - In **pre-pruning**, you restrict while you're growing. 
-- In **post-pruning**, you build the whole tree (greedily) and then you possibly merge notes. So you possibly undo sort of bad decisions that you made, but you don't restructure the tree
+- In **post-pruning**, you build the whole tree (greedily) and then you possibly merge nodes. So you possibly undo sort of bad decisions that you made, but you don't restructure the tree
 
 In `scikit-learn` right now, there's only pre-pruning. The most commonly used criteria are 
 - `max_depth`: the maximum depth of the tree
@@ -1202,8 +1321,8 @@ I wouldn't really say trees are interpretable but **small trees are interpretabl
 
 ### Relation to KNN
 - Predict average of neighbors:
-  - `**KNN**` is **very slow at prediction** because it needs to compute the distances to all training points
-  - `**Tree**` is very fast at prediction because they derive a set of rules and just need to traverse the binary tree based on the rules!
+  - `KNN` is **very slow at prediction** because it needs to compute the distances to all training points
+  - `Tree` is very fast at prediction because they derive a set of rules and just need to traverse the binary tree based on the rules!
 - Both models **can’t deal with `extrapolation`** (regression)!!!
   - can't predict value beyond the values of training samples
 
@@ -1215,7 +1334,7 @@ I wouldn't really say trees are interpretable but **small trees are interpretabl
 
 **`extrapolation` vs `generalization`**
 
-- For `generalization`, usually you make this `IID` assumption that you draw **data from the same distribution**, and you have some samples from the distribution from which you learn, and other samples from a distribution which you want to predict. 
+- For `generalization`, usually you make this `IID` assumption that you draw **data from the same distribution**, and you have some samples from the distribution from which you learn, and other samples from the distribution which you want to predict. 
 - For `extrapolation`, the distribution that I want to try to predict on was actually different from the distribution I learned on because they’re completely disjoint
 
 <br>
@@ -1225,7 +1344,7 @@ I wouldn't really say trees are interpretable but **small trees are interpretabl
   - Because **the tree structures is unstable**(by using different `random_state`), the features picked is unstable and so the importance will be unstable
   - Similar to `L1 norm`, if you have too many correlated features, it might pick one or the other. So keep that in mind when looking at feature importance
 - Feature importance in the tree models **only give you the importance of a feature, but not the direction**
-  - If you look at the coefficient of a linear model, for regression, if it's larger than it has a positive influence on target, or if it's classification, this feature has a positive influence to being a member of this class. 
+  - If you look at the coefficient of a linear model, for regression, if it's larger then it has a positive influence on target, or if it's classification, this feature has a positive influence to being a member of this class. 
   - **For trees, you don't have the directionality**, here you only get this is important only to make a decision, and the relationship with the class might not be monotonous, you only have a magnitude and you don't have a direction in the importance
 
 <br>
@@ -1241,7 +1360,17 @@ I wouldn't really say trees are interpretable but **small trees are interpretabl
 
 - Since Decision Tree is greedy, it's easy to grow very deeply, and overfit. Random Forest won't have this problem
 
-- 
+3. **Can we mix feature types(numercia, categorical) in one tree?**
+
+   yes
+
+4. **Can we have the same feature appears multiple times?**
+
+   yes
+
+   <img src="imgs/Screen Shot 2022-08-21 at 12.23.14 PM.png" alt="Screen Shot 2022-08-21 at 12.23.14 PM" height = "50%" width = "50%"/>
+
+   
 
 <br>
 
@@ -1252,7 +1381,7 @@ I wouldn't really say trees are interpretable but **small trees are interpretabl
 
 ·   `Stacking` involves fitting many different models types on the same data and using another model to learn how to best combine the predictions
 
-·   `Boosting` is an iterative strategy for adjusting an observations’ weight based on their previous classification
+·   `Boosting` is an iterative strategy for adjusting an observations’ weight based on their previous classification-> **building strong learner from weaker learners**
 
 ### VotingClassifier
 
@@ -1299,11 +1428,15 @@ voting.score(X_test, y_test), lr.score(X_test, y_test), tree.score(X_test, y_tes
 
 #### Overview
 
-Assume we have n samples, m features
+Assume we have **n** samples, **m** features
 
-We use bootstrapped sample , i.e, everytime, we select i<n samples and j<m features, with repeat, to calculate the best tree
+1. **Get boostrap sample**
 
-Repeat this process, get different decision trees and aggregate to build the random forest to predict the testing by comparing the results of different trees for each data point (bagging)
+   - Everytime, we select **i<n** samples with **j<m** features(both row sampling and column sampling), with repeat, to calculate one tree
+
+2. **Get the Forest**
+
+   Repeat the process, get different decision trees and aggregate to build the random forest to predict the testing by comparing the results of different trees for each data point(bagging)
 
 Model independence is the key, so models can protect each other from their individual error.
 
@@ -1322,7 +1455,7 @@ The way that random forest work is they randomize tree building in two ways
 - Main parameter: `max_features`
   - around `sqrt(n_features)` for classification
   - around `n_features` for regression
-- `n_estimators` > 100
+- `n_estimators` > 100  -> This is **the number of trees you want to build before taking the maximum voting or averages of predictions**.
   - By default, in scikit-learn, the number of trees in the forest is way too low, like 10
   - Usually, you want something like 100, or 500
 - Pre-pruning params: might help, definitely helps with model size
@@ -1349,7 +1482,6 @@ for n_estimators in estimator_range:
 #### How to validate the RF model: Out-Of-Bag estimates: OOB score
 
 - **Each tree** only uses ~66% of data points, we can evaluate each tree on the rest ~33%
-
 - Each prediction is an **average** over different subset of trees
   - For each data point, I only have a subset of the trees that makes a prediction but if I have enough trees overall, it'll still be fine.
   - For example, let’s assume there are five DTs in the random forest ensemble labeled from 1 to 5. And we have 4 rows in the data
@@ -1360,8 +1492,25 @@ for n_estimators in estimator_range:
     - And lastly, the OOB score is computed as **the number of correctly predicted rows from the out of bag sample.**
   - So basically, I don't need to use a seperate test set, I can just use the **out of bag estimate**
   - OOB VS Validation: `Validation` takes hold out from training set. OOB's hold out is the ones left from training set
-  
-  
+
+#### Difference and Similarity between OOB and CV score
+
+Let's assume the case of classification (can be extended to regression too, but omit for brevity). Essentially, our goal is to estimate the error of a forest of trees. Both out-of-bag error and k-fold cross-validation try to tell us the probability that:
+
+- The **forest** gives the correct classification (k-fold cross-validation looks at it this way).
+
+Which is identical to the probability that:
+
+- The **majority vote** of forest's trees is the correct vote (OOBE looks at it this way).
+
+And both are identical. The only difference is that k-fold cross-validation and OOBE assume **different size of learning samples**. For example:
+
+- In 10-fold cross-validation, the **learning set** is 90%, while the **testing set** is 10%.
+- However, in OOBE if each bag has n samples, such that **n= total number of samples in the whole samples set**, then this implies that the learning set is practically about 66% (two third) and the testing set is about 33% (one third).
+
+Therefore in my view the only reason why OOBE is a **pessimistic estimation** of forest's error is only because it *usually* trains by a smaller number of samples than usually done with k-fold cross-validation (where 10 folds is common).
+
+Due to that, I also think that 2-fold cross-validation is going to be more pessimistic estimation of forest's error than OOBE, and 3-fold cross-validation to be approximately equally pessimistic to OOBE.
 
 <br>
 
@@ -1374,6 +1523,10 @@ for n_estimators in estimator_range:
 **How is the `feature importance` calculated?**
 
 - Whenever a particular feature was used in the tree, you look at the **decrease in impurity**, and you aggregate these and in the end, you normalize it sum to one.
+- `Feature importance summary`:
+  - Regression : coefficients
+  - Trees: based on the criterion used to select split points, like Gini or decrease in impurity
+
 - Notice: 应该是有多种 `criteria` 的，至少 `xgboost` 是可以选的：
   - 1. `decrease in impurity`
   - 2. `frequency of selecting as split feature`
@@ -1419,7 +1572,7 @@ Let's look at the `regression` case first:
 - Basically, what gradient boosting does for **classification** is asking **regression trees** to learn decision function, $w^Tx + b$
 - It is doing regression again, but you're doing **logistic regression**, i.e. $\text{prob} = \sigma(w^Tx + b)$
   - Instead of using a linear model for logistic regression, we're now using this **linear combination of trees**
-  - In other words, we're **applying a log los instead of MSE/MAE to compute the residual**.
+  - In other words, we're **applying a log loss instead of MSE/MAE to compute the residual**.
   - So inside a gradient boosting classifier, you're not actually learning classification trees, you're learning **regression trees**, which are trying to predict the **probability**, and then you can apply `sigmoid` or `softmax` to map the probability to actual label
 
 <br>
@@ -1464,7 +1617,8 @@ Let's look at the `regression` case first:
 
 <br>
 
-## *XGBoost
+## XGBoost
+
 ### Overeview
 
 [XGBoost](https://xgboost.ai/) is a decision-tree-based ensemble Machine Learning algorithm that uses a [gradient boosting](https://en.wikipedia.org/wiki/Gradient_boosting) framework. In prediction problems involving unstructured data (images, text, etc.) artificial neural networks tend to outperform all other algorithms or frameworks. However, when it comes to small-to-medium structured/tabular data, decision tree based algorithms are considered best-in-class right now.
@@ -1567,237 +1721,282 @@ $$
 ## LightGBM
 
 - [https://github.com/NLP-LOVE/ML-NLP/blob/master/Machine%20Learning/3.4%20LightGBM/3.4%20LightGBM.md](https://github.com/NLP-LOVE/ML-NLP/blob/master/Machine Learning/3.4 LightGBM/3.4 LightGBM.md)
+- [CatBoost vs. LightGBM vs. XGBoost Which is the best algorithm?](https://towardsdatascience.com/catboost-vs-lightgbm-vs-xgboost-c80f40662924#:~:text=Even%20though%20LightGBM%20and%20XGBoost,faster%20models%20compared%20to%20XGBoost.)
+
+#### Catboost vs. LightGBM vs. XGBoost
+
+![Screen Shot 2022-08-21 at 9.03.27 PM](imgs/Screen Shot 2022-08-21 at 9.03.27 PM.png)
+
+![Screen Shot 2022-08-21 at 9.06.31 PM](imgs/Screen Shot 2022-08-21 at 9.06.31 PM.png)
 
 ## Summary of Tree Models
 
 **When to use tree-based models**
 
 - Need to capture non-linear relationships
-
 - No need for feature engineering
-
   - You probably want to use them if you have a lot of different kinds of weird features because they really don't care about scaling of the features, so it allows you to get rid of mostly preprocessing!
 
-- `Single DTree`: very interpretable (if small)
+**Different Trees**
 
-- `Random Forests`
+`Single DTree`: very interpretable (if small)
 
-  : very robust, good benchmark/baseline
+`Random Forests`
 
-  - no need for a lot of hyper-parameters tuning, you just run a random forest with `100` trees and with the default settings and it will work great
-  - Usually, I first ran a Logistic Regression then I run Radom Forests
+- no need for a lot of hyper-parameters tuning, you just run a random forest with `100` trees and with the default settings and it will work great
+- very robust, good benchmark/baseline
+- Usually, I first ran a Logistic Regression then I run Radom Forests
 
-- `Gradient Boosting`
+`Gradient Boosting`
 
-   often has best performance
+ 	- often has best performance
+ 	
+ 	- with careful tuning
 
-   with careful tuning
+​	- Tune the `depth of the trees` or the `learning rate`, ...
 
-  - Tune the `depth of the trees` or the `learning rate`, ...
-  - One case where you might not want to use trees is if you have **very high dimensional sparse data** then linear models might work better.
-  - On the contrary, if you have a **low dimensional space**, tree-based models are probably a good bet.
+- One case where you might not want to use trees is if you have **very high dimensional sparse data** then linear models might work better.
+- On the contrary, if you have a **low dimensional space**, tree-based models are probably a good bet.
 
-  
 
-  # Model Evaluation
 
-  ## **Metrics
 
-  ### Metrics for Binary Classification
 
-  #### Confusion Matrix
+</br>
 
-  - https://en.wikipedia.org/wiki/Precision_and_recall
-  - https://en.wikipedia.org/wiki/Sensitivity_and_specificity
+# Dimension Reduction
 
-  - **Precision**: of all the predicted positive samples, how many of them are truly positive
+https://towardsdatascience.com/dimensionality-reduction-for-machine-learning-80a46c2ebb7e
 
-  - **Recall**
+https://towardsdatascience.com/11-dimensionality-reduction-techniques-you-should-know-in-2021-dcb9500d388b
 
-    : of all the real/actual positive samples, how many of them our model predicted to be positive.
+# Model Evaluation
 
-    - Recall = Sensitivity = TPR (True Positive Rate) = Coverage
-    - Specificity = TNR (True Negative Rate)
+## Metrics
 
-  - **F1 score**: trade-off mean of precision and recalll $$ \begin{aligned} \text { Precision } &= \frac{\mathrm{TP}}{\mathrm{TP}+\mathrm{FP}}  \text {Recall} &= \frac{\mathrm{TP}}{\mathrm{TP}+\mathrm{FN}} \ \mathrm{F_1} &= 2 \frac{\text { precision } \cdot \text { recall }}{\text { precision }+\text { recall }} \end{aligned} $$
+### Metrics for Binary Classification
 
-    
+#### Confusion Matrix
 
-  #### Precision-Recall Curve
+- https://en.wikipedia.org/wiki/Precision_and_recall
 
-  <img src="imgs/PR_curve.png" alt="PR_curve" style="zoom:50%;" />
+- https://en.wikipedia.org/wiki/Sensitivity_and_specificity
 
-  
+- **Precision**: of all the predicted positive samples, how many of them are truly positive
 
-  - You can see that the `random forest` is little bit more stable for high precision, but in some places the
+- **Recall**
 
-    `SVM` is better than random forest and vice versa.
+  : of all the real/actual positive samples, how many of them our model predicted to be positive.
 
-    - So which of the two is better classifier really depends on which area you're interested in
+  - Recall = Sensitivity = TPR (True Positive Rate) = Coverage
+  - Specificity = TNR (True Negative Rate)
 
-  - If you want to do compare many models, and pick the best model. This is maybe not really feasible. You might want to summarize this in a single number.
+- **F1 score**: trade-off mean of precision and recalll 
 
-    - If I definitely want to have a recall of `90%`, I can put my threshold there and compare at that `threshold`.
+- $Precision = \frac{TP}{TP+FP}$
 
-    - If you don't really have a particular goal, you can also consider all thresholds at once
+- $Recall = \frac{TP}{TP+FN}$
 
-      , and basically compute `the area under this curve`
+- $F_1 = \frac{2}{\frac{1}{Precision}+\frac{1}{Recall}}$
 
-      - It's not exactly the same but that's sort of what `average precision` does
+#### Precision-Recall Curve
 
-  #### F1 vs Average Precision
+<img src="imgs/PR_curve.png" alt="PR_curve" height = "50%" width = "50%" />
 
-  **Average Precision** $$ \text { AveP }=\sum_{k=1}^{n} P(k) \Delta r(k) $$
 
-  - It could take all possible thresholds into account at once
-  - P(k): Precision at threshold k
-  - Δr(k): Change in recall between k and k−1
-  - Average precision is a pretty good metric to basically compare models if there are **imbalanced classes**
 
-  ```
-  ap_rf = average_precision_score(y_test, rf.predict_proba(X_test)[:, 1])
-  ap_svc = average_precision_score(y_test, svc.decision_function(X_test))
-  ```
+- You can see that the `random forest` is little bit more stable for high precision, but in some places the
 
-  **F1 vs Average Precision**
+  `SVM` is better than random forest and vice versa.
 
-  - `F1 score` only looks at the default threshold
-  - `Average precision` is a very sensitive metric that allows you to basically make good decisions even if the classes are very imbalanced and that also takes all possible thresholds into account
-  - `Average precision` only cares about ranking!
-  - `f1_score(y_test, rf.predict(X_test))` 传进去的是 **label**
-  - `average_precision_score(y_test, rf.predict_prob(X_test)[:, 1])` 传进去的是 **prob**
+  - So which of the two is better classifier really depends on which area you're interested in
 
-  #### ROC Curve
+- If you want to do compare many models, and pick the best model. This is maybe not really feasible. You might want to summarize this in a single number.
 
-  - **FPR**: False positive rate = FP / (TN + FP) = **FP / N** = 1 - Specificity (TNR)
-  - **TPR**: True positive rate = TP / (TP + FN) = **TP / P** = **Recall** = Sensitivity
+  - If I definitely want to have a recall of `90%`, I can put my threshold there and compare at that `threshold`.
 
-  <img src="imgs/roc_curve.png" alt="roc_curve" style="zoom:50%;" />
+  - If you don't really have a particular goal, you can also consider all thresholds at once
 
-  - For the `precision-recall curve`, the optimum was in the **top right**, you want both precision and recall to be as high as possible, find the best trade-off point
-  - For the `ROC curve`, the ideal point is the **top left**, you want a false positive rate of zero and a true positive rate of one.
+    , and basically compute `the area under this curve`
 
-  **ROC AUC**
+    - It's not exactly the same but that's sort of what `average precision` does
 
-  - it's always 0.5 for `random` or `constant` predictions!
-  - AUC is a ranking metric, it takes all possible thresholds into account, which means that it's **independent of the default thresholds**
-  - Question: If I don't have probabilities can I compute ROC
-    - Yes, it does not depend on probabilities at all. It's just I go through **all possible thresholds**. It's really just a ranking.
+#### F1 vs Average Precision
 
-  #### Summary
+**Average Precision** $$ \text { AveP }=\sum_{k=1}^{n} P(k) \Delta r(k) $$
 
-  - Threshold-based:
+- It could take all possible thresholds into account at once
+- P(k): Precision at threshold k
+- Δr(k): Change in recall between k and k−1
+- Average precision is a pretty good metric to basically compare models if there are **imbalanced classes**
 
-    - accuracy
-    - precision, recall, f1
+```
+ap_rf = average_precision_score(y_test, rf.predict_proba(X_test)[:, 1])
+ap_svc = average_precision_score(y_test, svc.decision_function(X_test))
+```
 
-  - Ranking:
+**F1 vs Average Precision**
 
-    - Average Precision: it's a little bit more tricky to see what the different orders of magnitude mean
-    - ROC AUC: I like it because I know **what 0.5 means**
+- `F1 score` only looks at the default threshold
+- `Average precision` is a very sensitive metric that allows you to basically make good decisions even if the classes are very imbalanced and that also takes all possible thresholds into account
+- `Average precision` only cares about ranking!
+- `f1_score(y_test, rf.predict(X_test))` 传进去的是 **label**
+- `average_precision_score(y_test, rf.predict_prob(X_test)[:, 1])` 传进去的是 **prob**
 
-  - TPR & FPR
+#### ROC Curve
 
-    - TPR(Recall): 衡量正样本的预测能力
-    - FPR()
+- **FPR**: False positive rate = FP / (TN + FP) = **FP / N** = 1 - Specificity (TNR) = of all true negatives , how many of them are predicted falsely as positive
+- **TPR**: True positive rate = TP / (TP + FN) = **TP / P** = **Recall** = Sensitivity = of all true positive, how many of them are predicted as positive
 
-  - 对于 P-R 曲线和 ROC 曲线，它们的优缺点分别是什么呢？
+<img src="imgs/roc_curve.png" alt="roc_curve" style="zoom:50%;" />
 
-    在正负样本分布极不均衡的情况下, 哪个曲线的表现会更稳定、更权威一点？
+- For the `precision-recall curve`, the optimum was in the **top right**, you want both precision and recall to be as high as possible, find the best trade-off point
+- For the `ROC curve`, the ideal point is the **top left**, you want a false positive rate of zero and a true positive rate of one.
 
-    - ROC曲线更稳定
+**ROC AUC**
 
-      : FPR = FP/N, TPR = TP/P
+- **it's always 0.5 for `random` or `constant` predictions!**
+- AUC is a ranking metric, it takes all possible thresholds into account, which means that it's **independent of the default thresholds**
+- Question: If I don't have probabilities can I compute ROC
+  - Yes, it does not depend on probabilities at all. It's just I go through **all possible thresholds**. It's really just a ranking.
 
-      - 当我们将负样本复制10倍时，TPR显然不会变，**FPR是负样本中被预测为正样本的比例，这其实也是不变的**，那整个ROC曲线也就没有变。
+#### Summary
 
-    - PR曲线，Precision = TP/(TP+FP)，当我们将负样本复制10倍时，TP不变，FP增大 --> **Precision 降低，而 Recall 没有变**，显然ROC曲线更稳定一些
+- Threshold-based:
 
-  - **P-R曲线**的优点是能够表现精确率与召回率平衡的过程，缺点是**无法显示明确的阈值，且缺乏对TN的考量**。
+  - accuracy
+  - precision, recall, f1
 
-  - **ROC曲线**不仅能表现假阳性率 (FPR) 与真阳性率 (TPR) 的平衡，还可以表现出具体的阈值，也考量了 TN，FN
+- Ranking:
 
-  - Most times in reality, we have much more negative samples than positive samples(eg. medical, spam). So we will have a lot TN. So FPR = **FP / N** can't represent how well we did on prediction, but **Precision** will be more sensitive to how we improve FP. 
+  - Average Precision: it's a little bit more tricky to see what the different orders of magnitude mean
+  - ROC AUC: I like it because I know **what 0.5 means**
 
-  
+- TPR & FPR
 
-  ### Metrics for Multi-class Classification
+  - TPR(Recall): 衡量正样本的预测能力
+  - FPR()
 
-  **Confusion Matrix**
+- 对于 P-R 曲线和 ROC 曲线，它们的优缺点分别是什么呢？
 
-  - The diagonal is everything that's correct, the off-diagonal are mistakes.
-  - `classification_report(y_test, y_pred)` in `sklearn` will give you `precision`, `recall` and `F1` score for each class
+  在正负样本分布极不均衡的情况下, 哪个曲线的表现会更稳定、更权威一点？
 
-  #### Averaging Strategies
+  - ROC曲线更稳定
 
-  **Macro**
+    : FPR = FP/N, TPR = TP/P
 
-  - First compute each class `precision/recall/F1`, then compute average over number of classes (**arithmetic mean**)
-  - Macro is counted **each class** the same
+    - 当我们将负样本复制10倍时，TPR显然不会变，**FPR是负样本中被预测为正样本的比例，这其实也是不变的**，那整个ROC曲线也就没有变。
 
-  ```
-  recall_score(y_test, y_pred, average='macro')
-  ```
+  - PR曲线，Precision = TP/(TP+FP)，当我们将负样本复制10倍时，TP不变，FP增大 --> **Precision 降低，而 Recall 没有变**，显然ROC曲线更稳定一些
 
-  **Weighted**
+- **P-R曲线**的优点是能够表现精确率与召回率平衡的过程，缺点是**无法显示明确的阈值，且缺乏对TN的考量**。
 
-  - not a simple arithmetic mean, instead, **taking number of samples** in each class into consideration
-  - Weighted is count **each sample** the same
+- **ROC曲线**不仅能表现假阳性率 (FPR) 与真阳性率 (TPR) 的平衡，还可以表现出具体的阈值，也考量了 TN，FN
 
-  ```
-  recall_score(y_test, y_pred, average='weighted')
-  ```
+- Most times in reality, we have much more negative samples than positive samples(eg. medical, spam). So we will have a lot TN. So FPR = **FP / N** can't represent how well we did on prediction, but **Precision** will be more sensitive to how we improve FP. 
 
-  **Micro**
 
-  - Compute `precision/recall` by considering all TPi in each class
-  - Could be used in **multi-lable classification** as well
 
-  #### Built-in Scoring
+### Metrics for Multi-class Classification
 
-  - The thing in `scikit-learn`, whatever you use for scoring, the greater the scoring the better it is.
-    - So you can’t use `mean_squared_error` for doing a grid search, because the **grid search assumes greater is better** so you have to use `neg_mean_squared_error`.
+**Confusion Matrix**
 
-  <img src="imgs/sklearn_score.png" alt="sklearn_score" style="zoom:50%;" />
+- The diagonal is everything that's correct, the off-diagonal are mistakes.
+- `classification_report(y_test, y_pred)` in `sklearn` will give you `precision`, `recall` and `F1` score for each class
 
-  ### Metrics for Regression
+#### Averaging Strategies
 
-  #### Overeview
+**Macro**
 
-  **SSE: Sum of Squared Errors** $$ \mathrm{SSE}=\sum_{i=1}^{n}\left(y_{i}-f\left(x_{i}\right)\right)^{2} $$
+- First compute each class `precision/recall/F1`, then compute average over number of classes (**arithmetic mean**)
+- Macro is counted **each class** the same
 
-  - SSE is highly sensitive to number of data points.
-  - MSE: Mean Squared Errors
-  - MAE: Mean Absolute Error
-  - RMSE: Root Square of Mean Squared Errors
+```
+recall_score(y_test, y_pred, average='macro')
+```
 
-  **R2** $$ \begin{aligned} R^{2}(y, \hat{y}) &=1-\frac{\sum_{i=1}^{n}\left(y_{i}-\hat{y}*{i}\right)^{2}}{\sum*{i=0}^{n-1}\left(y_{i}-\bar{y}\right)^{2}} \ \bar{y} &=\frac{1}{n} \sum_{i=1}^{n} y_{i} \end{aligned} $$
+**Weighted**
 
-  - $R^2$ measures, “How much the change in output variable y is explained by the change in input variable x
-  - $R^2$ is always between 0 and 1:
-    - 0 indicates that the model explains Null variability in the response data around its mean.
-    - 1 indicates that the model explains full variability in the response data around its mean.
-    - If it's negative, it means you do a worse job at predicting and just predicting the mean...
-      - It can happen if your model was really bad and biased. The other reason is if you use a test set
-      - This is guaranteed to be positive on the data it was fit on with an unbiased linear model
-  - R2 can be **misleading if there's outliers** in the training data and some consider it a bad metric
-  - R2 has less variation in score compare to SSE. However, One disadvantage of R2 is that **it can only increase as predictors are added to the regression model**. This increase is artificial when predictors are not actually improving the model’s fit. To cure this, we use **Adjusted R2**
+- not a simple arithmetic mean, instead, **taking number of samples** in each class into consideration
+- Weighted is count **each sample** the same
 
-  **Adjusted R2** $$ \bar{R}^{2}=1-\left(1-R^{2}\right) \frac{n-1}{n-p-1} $$
+```
+recall_score(y_test, y_pred, average='weighted')
+```
 
-  - It calculates the proportion of the variation in the dependent variable accounted by the explanatory variables.
-  - It incorporates the model’s degrees of freedom.
-  - Adjusted R2 will decrease as predictors are added if the increase in model fit does not make up for the loss of degrees of freedom. Likewise, it will increase as predictors are added if the increase in model fit is worthwhile.
-  - **Adjusted R2 should always be used with models with more than one predictor variable**. It is interpreted as the proportion of total variance that is explained by the model. **It would only increase if an additional variable improves the accuracy of mode**
+**Micro**
 
-  **Summary**:
+- Compute `precision/recall` by considering all TPi in each class
+- Could be used in **multi-lable classification** as well
 
-  - The built-in standard metrics by default in `scikit-learn` uses R2. The other obvious metric is `Mean Squared Error(MSE)`
-  - R^2 : easy to understand scale; it's between **[0, 1]**
-  - MSE : easy to relate to input, the scale of the mean squared error is sort of relates to the scale of the output
-    - When using **scoring** for grid search, use `neg_mean_squared_error`
-  - MAE (Mean absolute error/Median Absolute Error): **more robust to outliers**
-  - RMSLE is also a way to avoid the outlier impacts
+#### Built-in Scoring
+
+- The thing in `scikit-learn`, whatever you use for scoring, the greater the scoring the better it is.
+  - So you can’t use `mean_squared_error` for doing a grid search, because the **grid search assumes greater is better** so you have to use `neg_mean_squared_error`.
+
+<img src="imgs/sklearn_score.png" alt="sklearn_score" style="zoom:50%;" />
+
+### Metrics for Regression
+
+#### Overeview
+
+**SSE: Sum of Squared Errors** $$ \mathrm{SSE}=\sum_{i=1}^{n}\left(y_{i}-f\left(x_{i}\right)\right)^{2} $$
+
+- SSE is highly sensitive to number of data points.
+- MSE: Mean Squared Errors
+- MAE: Mean Absolute Error
+- RMSE: Root Square of Mean Squared Errors
+
+**R2** $$ \begin{aligned} R^{2}(y, \hat{y}) &=1-\frac{\sum_{i=1}^{n}\left(y_{i}-\hat{y}*{i}\right)^{2}}{\sum*{i=0}^{n-1}\left(y_{i}-\bar{y}\right)^{2}} \ \bar{y} &=\frac{1}{n} \sum_{i=1}^{n} y_{i} \end{aligned} $$
+
+- $R^2$ measures, “How much the change in output variable y is explained by the change in input variable x
+- $R^2$ is always between 0 and 1:
+  - 0 indicates that the model explains Null variability in the response data around its mean.
+  - 1 indicates that the model explains full variability in the response data around its mean.
+  - If it's negative, it means you do a worse job at predicting and just predicting the mean...
+    - It can happen if your model was really bad and biased. The other reason is if you use a test set
+    - This is guaranteed to be positive on the data it was fit on with an unbiased linear model
+- R2 can be **misleading if there's outliers** in the training data and some consider it a bad metric
+- R2 has less variation in score compare to SSE. However, One disadvantage of R2 is that **it can only increase as predictors are added to the regression model**. This increase is artificial when predictors are not actually improving the model’s fit. To cure this, we use **Adjusted R2**
+
+**Adjusted R2** $$ \bar{R}^{2}=1-\left(1-R^{2}\right) \frac{n-1}{n-p-1} $$
+
+- It calculates the proportion of the variation in the dependent variable accounted by the explanatory variables.
+- It incorporates the model’s degrees of freedom.
+- Adjusted R2 will decrease as predictors are added if the increase in model fit does not make up for the loss of degrees of freedom. Likewise, it will increase as predictors are added if the increase in model fit is worthwhile.
+- **Adjusted R2 should always be used with models with more than one predictor variable**. It is interpreted as the proportion of total variance that is explained by the model. **It would only increase if an additional variable improves the accuracy of mode**
+
+**Summary**:
+
+- The built-in standard metrics by default in `scikit-learn` uses R2. The other obvious metric is `Mean Squared Error(MSE)`
+- R^2 : easy to understand scale; it's between **[0, 1]**
+- MSE : easy to relate to input, the scale of the mean squared error is sort of relates to the scale of the output
+  - When using **scoring** for grid search, use `neg_mean_squared_error`
+- MAE (Mean absolute error/Median Absolute Error): **more robust to outliers**
+- RMSLE is also a way to avoid the outlier impacts
+
+### Choosing Models
+
+#### Cross Validation
+
+Assess how well your model can generalize to another independent dataset. CV can only **validate** your model selection, it cannot select model for you
+
+For each iteration, we will get a performance, find performance for **one validation = avg(performance)**
+
+**Steps:**
+
+1. Shuffle the dataset randomly
+
+2. Split the data into k groups
+
+3. For each unique group:
+
+   - Take out the group as a test dataset
+   - Take another group as a validation set
+   - And take the remaining groups as training
+   - Fit a model on the training set and evaluate it on the test and validation set
+   - retain the evaluation score
+4. Repeat the process for each unique group and get the **average score**
 
 ## Calibration
 
@@ -1917,7 +2116,9 @@ $$
 <br>
 
 # Imbalanced Data
+
 ## Intro
+
 **Two sources of imbalance**
 - `Asymmetric cost`: Even if the probability of class 0 and class 1 are the same, they might be different like in business costs, or health costs, or any other kind of cost or benefit associated with making different kinds of mistakes
 - `Asymmetric data`: One class is much more common than the other class.
@@ -1973,3 +2174,86 @@ SMOTE is an algorithm that performs data augmentation by creating **synthetic da
   - This could be combined with undersampling strategies
 
 <br>
+
+
+
+# Optimization
+
+**Setting up your ML application**
+
+In traditional ML, when we split train/dev/test, we normally follow the percentages: 60/20/20, that’s good enough for normal sized data, such as 1k,10k, but when we talk about deep learning, sometimes the data becomes too large, such as 1m, then we don’t need so much data in dev/test
+ For example, if we have 1M data, our dev size should be big enough to compare two algorithms, such as 1k, or 10k, our test size should be big enough to test if our learning algorithm works, such as 1k, 10k
+
+Try to make sure Dev/test sets come from the same distribution
+
+If you want to build a reliable machine learning model, you need to split your dataset into thetraining, validation, and test sets. If you don't, **your results will be biased, and you'll end up with a false impression of better model accuracy**.
+
+## Gradient Descent
+
+`Gradient descent` iis an **iterative first-order** optimisation algorithm used to find a local minimum/maximum of a given function. This method is commonly used in ML and DL to **minimize a cost/loss function**. 
+
+GD does not work for all functions. There are two specific requirements. A function has to be:
+
+- Differentiable - If a function is differentiable it has a derivative for each point in its domain 
+- Convex - we can find a global minimum
+
+**`Gradient`**
+
+Intuitively it is a **slope of a curve at a given point in a specified direction.**
+
+In the case of **a univariate function**, it is simply the **first derivative at a selected point**. In the case of **a multivariate function**, it is a **vector of derivatives** in each main direction (along variable axes). Because we are interested only in a slope along one axis and we don’t care about others these derivatives are called **partial derivatives**.**
+
+**`Learning rate`**
+
+The size of each step is called the learning rate. 
+
+With a **high learning rate** we can cover more ground each step, but we risk **overshooting** the lowest point since the slope of the hill is constantly changing. With a very **low learning rate**, we can confidently move in the direction of the negative gradient since we are recalculating it so frequently. A low learning rate is more precise, but calculating the gradient is **time-consuming**, so it will take us a very long time to get to the bottom.
+
+<img src="imgs/Screen Shot 2022-08-12 at 1.12.24 PM.png" alt="Screen Shot 2022-08-12 at 1.12.24 PM" height = "50%" width = "50%" />
+
+### Batch GD:
+
+We take the average of the gradients of all the training examples, and then use that mean gradient to update our parameters. So that's just one step of gradient descent in one epoch. We may need many steps to achieve our minimum, and many epoches to optimize our parameters. Batch Gradient Descent is great for convex or relatively smooth error manifolds. In this case, we move somewhat directly towards an optimum solution
+
+However, it's not working on large dataset.
+
+### Stochastic GD
+
+In Stochastic Gradient Descent (SGD), we consider just one example at a time to take a single step. 
+
+We do the following steps in **one epoch** for SGD:
+
+1. Take an example
+2. (Feed it to Neural Network)
+3. Calculate it’s gradient
+4. Use the gradient we calculated in step 3 to update the weights
+5. Repeat steps 1–4 for all the examples in training dataset
+
+Since we are considering just one example at a time the cost will fluctuate over the training examples and it will **not** necessarily decrease. But in the long run, you will see the cost decreasing with fluctuations.
+
+<img src="imgs/Screen Shot 2022-08-12 at 1.18.06 PM.png" alt="Screen Shot 2022-08-12 at 1.18.06 PM" height = "30%" width = "30%"/>
+
+Also because the cost is so fluctuating, it will never reach the minima but it will keep dancing around it.
+
+SGD can be used for larger datasets. It converges faster when the dataset is large as it causes updates to the parameters more frequently.
+
+### Mini Batch GD
+
+`Batch Gradient Descent` can be used for **smoother curves**.`SGD` can be used when the dataset is large. Batch Gradient Descent converges directly to minima. SGD converges faster for larger datasets. But, since in SGD we use only one example at a time, we cannot implement the vectorized implementation on it. This can slow down the computations. To tackle this problem, a mixture of Batch Gradient Descent and SGD is used.
+
+We use a batch of a **fixed number** of training examples which is less than the actual dataset and call it a **mini-batch**. Doing this helps us achieve the advantages of both the former variants we saw. 
+
+So, after creating the mini-batches of fixed size, we do the following steps in **one epoch:**
+
+1. Pick a mini-batch
+2. Feed it to Neural Network
+3. Calculate the mean gradient of the mini-batch
+4. Use the mean gradient we calculated in step 3 to update the weights
+5. Repeat steps 1–4 for the mini-batches we created
+
+Just like SGD, the average cost over the epochs in mini-batch gradient descent fluctuates because we are averaging a small number of examples at a time. 
+
+<img src="imgs/Screen Shot 2022-08-12 at 1.22.14 PM.png" alt="Screen Shot 2022-08-12 at 1.22.14 PM" height = "30%" width = "30%" />
+
+So, when we are using the mini-batch gradient descent we are updating our parameters frequently as well as we can use vectorized implementation for faster computations.
+
