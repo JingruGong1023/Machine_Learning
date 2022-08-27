@@ -1152,33 +1152,55 @@ Classification and Regression Tree(**CART**) for regression minimized SSE by spl
   - deal **missing** values: `xgboost` (can't deal with `categorical` features)
 
 ### Algorithms Implementation(ID3, C4.5, CART)
-**ID3**: Splits based on `Information Gain`
-$$
-H(X)=-\sum_{x \in \chi} p(x) \log p(x)
-$$
-- **The smaller H, The more pure for $X$ **
-- Assume we have $K$ classes for data $D$:
-  - (1) Calculate $H(D)$
-$$
-H(D)=-\sum_{k=1}^{K} \frac{\left|C_{k}\right|}{|D|} \log _{2} \frac{\left|C_{k}\right|}{|D|}
-$$
-  - (2) 计算特征 $A$ 对数据集 $D$ 信息条件熵 $H(D \mid A)$
-    - $D_i$ 表示的是以属性 $A$ 为划分，分成 $n$ 个分支，第 $i$ 个分支的节点集合。
-    - This function calculates splits at feature A, the sum of H(D) for n splits
-$$
-H(D \mid A)=\sum_{i=1}^{n} \frac{\left|D_{i}\right|}{|D|} H\left(D_{i}\right)=-\sum_{i=1}^{n} \frac{\left|D_{i}\right|}{|D|} \sum_{k=1}^{K} \frac{\left|D_{i k}\right|}{\left|D_{i}\right|} \log _{2} \frac{\left|D_{i k}\right|}{\left|D_{i}\right|}
-$$
-  - (3) 计算信息增益, 越大越好
-$$
-g(D, A)=H(D)-H(D \mid A)
-$$
+**ID3**: 
+
+Stands for **Iterative Dichotomiser 3** because the algorithm iteratively divides features into two or more groups at each step
+
+`ID3` uses a **top-down greedy** approch to build a decision tree. In simple words, the top down approach means that we start building the tree from the top and the **greedy** approach means that at each iteration we select the best feature at the **present moment** to create a node
+
+**Note**: most times, the best feature at the present moment **won't lead to the optimal solution in the end**
+
+Most generally ID3 is only used for classification problems with [nominal](https://corporatefinanceinstitute.com/resources/knowledge/other/nominal-data/) features only.
+
+- Splits based on `Information Gain`
+
+- `Information Gain` calculates the reduction in the entropy and measures **how well a given feature separates or classifies the target classes**
+
+- The feature with the **highest Information Gain** is selected as the best one
+- `Entropy` is the measure of disorder in the target feature of the dataset. 
+- In the case of binary classification (where the target column has only two types of classes) entropy is **0** if all values in the target column are homogenous(similar) and will be **1** if the target column has equal number values for both the classes.
+  - $Entropy \ H(X)\ =-\sum_{x \in \ chi} p(x) \ log_2 p(x)$
+- **ID3 steps**
+  - Assume we have $K$ classes for data $D$
+
+1. Calculate $H(D)$
+
+​															$H(D)=-\sum_{k=1}^{K} \frac{\left|C_{k}\right|}{|D|} \log _{2} \frac{\left|C_{k}\right|}{|D|}$
+
+2. 计算特征 $A$ 对数据集 $D$ 信息条件熵 $H(D \mid A)$
+
+​							$D_i$ 表示的是以属性 $A$ 为划分，分成 $n$ 个分支，第 $i$ 个分支的节点集合。
+
+​							This function calculates splits at feature A, the sum of H(D) for n splits
+
+​														$H(D \mid A)=\sum_{i=1}^{n} \frac{\left|D_{i}\right|}{|D|} H\left(D_{i}\right)=-\sum_{i=1}^{n} \frac{\left|D_{i}\right|}{|D|} \sum_{k=1}^{K} \frac{\left|D_{i k}\right|}{\left|D_{i}\right|} \log _{2} \frac{\left|D_{i k}\right|}{\left|D_{i}\right|}$
+
+3. Calculate Information Gain, 越大越好
+
+​														$g(D, A)=H(D)-H(D \mid A)$
+
+				4. Considering that all rows don't belong to the same class, split the dataset into subsets using the feature for which the IG is max
+				4. Make a decision tree node using the feature with the maximum Information gain.
+				4. If all rows belong to the same class, make the current node as a leaf node with the class as its label.
+				4. Repeat for the remaining features until we run out of all features, or the decision tree has all leaf nodes.
+
 - ID3**偏向于取值较多的属性**进行分割，存在一定的偏好：假设每个记录有一个属性`'ID'`,若按照 `ID` 进行分割的话，在这个属性上，能够取得的特征值是样本数，特征数目太多，无论以哪一个 `ID` 进行划分，叶子节点的值只会有一个，纯度很大，得到的信息增益很大，这样划分出来的决策树没有意义。-- 过拟合
   - 为减少这一影响，有学者提出了C4.5算法
 
 **C4.5**: 基于**信息增益率** (Gain Ratio) 准则选择最有分割属性的算法
-$$
-\operatorname{GainRatio}(D, a)=\frac{\operatorname{Gain}(D, a)}{\operatorname{IV}(a)}, I V(a)=-\sum_{v=1}^{V} \frac{\left|D^{v}\right|}{|D|} \log _{2} \frac{\left|D^{v}\right|}{|D|}
-$$
+
+​													$\operatorname{GainRatio}(D, a)=\frac{\operatorname{Gain}(D, a)}{\operatorname{IV}(a)}, I V(a)=-\sum_{v=1}^{V} \frac{\left|D^{v}\right|}{|D|} \log _{2} \frac{\left|D^{v}\right|}{|D|}$
+
   - 信息增益率通过引入一个被称为分裂信息(Split information)的惩罚项来**惩罚取值较多的属性**
   - `IV(a)`是由属性A的特征值个数决定的，**个数越多，IV值越大，信息增益率越小**，这样就可以避免模型偏好特征值多的属性，但也导致了**信息增益率偏向取值较少的特征**
     - 因此 C4.5 决策树先从候选划分属性中找出信息增益高于平均水平的属性，在从中选择增益率最高的。
@@ -1186,20 +1208,25 @@ $$
 
 **CART**(Classification And Regression Tree): 以**基尼系数**为准则选择最优划分属性，可用于**分类**和**回归**
 - scikit-learn choice
+
+- Can be used for **both classification and regression**
+
 - **binary tree**
+
 - **最小化不纯度**，而不是最大化信息增益，CART 每次迭代都会**降低基尼系数**：
   - Gini(D) 反映了数据集D的纯度，**值越小，纯度越高**。我们在候选集合中选择使得划分后基尼指数最小的属性作为最优化分属性
-$$
-\begin{aligned}
-&\operatorname{Gini}(D)=1-\sum_{i=0}^{n}\left(\frac{D i}{D}\right)^{2} \\
-&\operatorname{Gini}(D \mid A)=\sum_{i=0}^{n} \frac{D i}{D} \operatorname{Gini}(D i)
-\end{aligned}
-$$
+  
+    ​										${Gini}(D)=1-\sum_{i=0}^{n}(P_i)^{2}$
+  
+    where $P_i$ denotes the probability of class i. n denotes the class counts
+  
+    ​										${Gini}(D \mid A)=\sum_{i=0}^{n} \frac{D i}{D} \operatorname{Gini}(D i)$
 
 <br>
 
 ### Classification Tree
 **Training Process**
+
 - Usually, for classification we have continuous features and so the questions are thresholds on a single feature.
   - what about categorical features ?
     - `OneHotEncoding`: is X_a 0 or 1?
@@ -1229,14 +1256,13 @@ $$
 For classification, there are two common criteria to preserve the purity of the `leaf`
 
 - `Gini Index`: default in `sklearn`
-$$
-H_{\mathrm{gini}}\left(X_{m}\right)=\sum_{k \in \mathcal{Y}} p_{m k}\left(1-p_{m k}\right) = 1 - p_{m k}^2
-$$
+
+​																		$H_{\mathrm{gini}}\left(X_{m}\right)=\sum_{k \in \mathcal{Y}} p_{m k}\left(1-p_{m k}\right) = 1 - p_{m k}^2$
+
 - `Cross-Entropy`: aka `log loss`
-  - I think this is just Information Entropy $H(p)$?
-$$
-H_{\mathrm{CE}}\left(X_{m}\right)=-\sum_{k \in \mathcal{Y}} p_{m k} \log \left(p_{m k}\right)
-$$
+  - I think this is just Information Entropy $H(p)$
+  
+    ​															$H_{\mathrm{CE}}\left(X_{m}\right)=-\sum_{k \in \mathcal{Y}} p_{m k} \log \left(p_{m k}\right)$
   - $X_{m}$: observations in node $m$
   - $\mathcal{Y}$: classes
   - $p_{m}$: distribution over classes in node $\mathrm{m}$
@@ -1442,6 +1468,26 @@ Model independence is the key, so models can protect each other from their indiv
 
 How to be independent: -> `bagging`
 
+The `forest error rate` depends on two things:
+
+1. The *correlation* between any two trees in the forest. Increasing the correlation increases the forest error rate.
+
+2. The *strength* of each individual tree in the forest. A tree with a low error rate is a strong classifier. Increasing the strength of the individual trees decreases the forest error rate.
+
+3. Reduce the **number of features** will reduce both the correlation and strength. Vice versa. 
+
+   Somewhere in between is an "optimal" range of m - usually quite wide. Using the oob error rate (see below) a value of m in the range can quickly be found. This is the only adjustable parameter to which random forests is somewhat sensitive.
+
+#### Pros
+
+1. runs efficiently on large data
+2. can handle high dimensional data
+3. It generates an internal unbiased estimate of the generalization error as the forest building progresses.
+
+#### Cons
+
+
+
 #### Randomize in two ways
 The way that random forest work is they randomize tree building in two ways
 - `Row sampling`: As with `bagging` if you do a `bootstrap` sample of the `dataset`, each tree you take a `bootstrap` sample of the dataset 
@@ -1451,7 +1497,53 @@ The way that random forest work is they randomize tree building in two ways
   - This adds another hyperparameter in the tree building -- `max_features`, which is the number of features that you want to look **at each split**
   
 
+#### Dealing with missing data: Proximity
+
+These are one of the most useful tools in random forests to **deal with missing data**. The proximities originally formed a NxN matrix. After a tree is grown, put all of the data, both training and oob, down the tree. **If cases k and n are in the same terminal node increase their proximity by one**. At the end, normalize the proximities by dividing by the number of trees.
+
+Users noted that with large data sets, they could not fit an NxN matrix into fast memory. A modification reduced the required memory size to NxT where T is the number of trees in the forest. To speed up the computation-intensive scaling and iterative missing value replacement, the user is given the option of retaining only the nrnn largest proximities to each case.
+
+When a test set is present, the proximities of each case in the test set with each case in the training set can also be computed. The amount of additional computing is moderate.
+
+**The basic idea is to do a quick replacement of missing data and then iteratively improve the missing imputation using proximity**. To work with unlabeled data, just replicate the data with all labels, and then treat it as labeled data.
+
+The fraction of trees for which a pair of observations share a terminal node gives the proximity matrix, and so explicitly uses the class label.
+
+Training set:
+
+1. Replace missing values by the average value.
+
+2. Repeat until satisfied:
+
+   a. Using imputed values calculated so far, train a random forest.
+
+   b. Compute the proximity matrix.
+
+   c. Using the proximity as the weight, impute missing values as the weighted average of non-missing values.
+
+Test set:
+
+1. If labels exist, use the imputation derived from test data.
+2. If data is unlabeled, replicate the test set with a copy for each class label and proceed as with labeled data.
+
+Here, (weighted) average refers to (weighted) median for numerical variables and (weighted) mode for categorical variables. **4-6 iterations are recommended in the references**.
+
+#### Dealing with outliers: Proximity
+
+*We can also use isolation forests*
+
+Outliers are generally defined as cases that are **removed from the main body of the data**. Translate this as: **outliers are cases whose proximities to all other cases in the data are generally small**. A useful revision is to define outliers relative to their class. Thus, an outlier in class j is a case whose proximities to all other class j cases are small.
+
+Define the average proximity from case n in class j to the rest of the training data class j as:
+
+$P(n)\ = \ \sum {prox^2 (n,k)}$
+
+The raw outlier measure for case n is defined as $n/p(n)$ 
+
+This will be large if the average proximity is small. Within each class find the median of these raw measures, and their absolute deviation from the median. Subtract the median from each raw measure, and divide by the absolute deviation to arrive at the final outlier measure.
+
 #### Tuning Random Forests
+
 - Main parameter: `max_features`
   - around `sqrt(n_features)` for classification
   - around `n_features` for regression
@@ -1725,9 +1817,11 @@ $$
 
 #### Catboost vs. LightGBM vs. XGBoost
 
-![Screen Shot 2022-08-21 at 9.03.27 PM](imgs/Screen Shot 2022-08-21 at 9.03.27 PM.png)
+<img src="imgs/Screen Shot 2022-08-21 at 9.03.27 PM.png" alt="Screen Shot 2022-08-21 at 9.03.27 PM.png" height = "100%" width = "100%" />
 
-![Screen Shot 2022-08-21 at 9.06.31 PM](imgs/Screen Shot 2022-08-21 at 9.06.31 PM.png)
+<img src="imgs/Screen Shot 2022-08-21 at 9.06.31 PM.png" alt="Screen Shot 2022-08-21 at 9.06.31 PM.png" height = "100%" width = "100%" />
+
+
 
 ## Summary of Tree Models
 
@@ -1784,12 +1878,16 @@ https://towardsdatascience.com/11-dimensionality-reduction-techniques-you-should
 
 - **Precision**: of all the predicted positive samples, how many of them are truly positive
 
+  **`Precision` helps when the costs of false positives are high. **
+
 - **Recall**
 
   : of all the real/actual positive samples, how many of them our model predicted to be positive.
 
   - Recall = Sensitivity = TPR (True Positive Rate) = Coverage
   - Specificity = TNR (True Negative Rate)
+
+  **`Recall` helps when the cost of False Negative is high**
 
 - **F1 score**: trade-off mean of precision and recalll 
 
@@ -2186,11 +2284,11 @@ In traditional ML, when we split train/dev/test, we normally follow the percenta
 
 Try to make sure Dev/test sets come from the same distribution
 
-If you want to build a reliable machine learning model, you need to split your dataset into thetraining, validation, and test sets. If you don't, **your results will be biased, and you'll end up with a false impression of better model accuracy**.
+If you want to build a reliable machine learning model, you need to split your dataset into the training, validation, and test sets. If you don't, **your results will be biased, and you'll end up with a false impression of better model accuracy**.
 
 ## Gradient Descent
 
-`Gradient descent` iis an **iterative first-order** optimisation algorithm used to find a local minimum/maximum of a given function. This method is commonly used in ML and DL to **minimize a cost/loss function**. 
+`Gradient descent` is an **iterative first-order** optimisation algorithm used to find a local minimum/maximum of a given function. This method is commonly used in ML and DL to **minimize a cost/loss function**. 
 
 GD does not work for all functions. There are two specific requirements. A function has to be:
 
@@ -2201,7 +2299,7 @@ GD does not work for all functions. There are two specific requirements. A funct
 
 Intuitively it is a **slope of a curve at a given point in a specified direction.**
 
-In the case of **a univariate function**, it is simply the **first derivative at a selected point**. In the case of **a multivariate function**, it is a **vector of derivatives** in each main direction (along variable axes). Because we are interested only in a slope along one axis and we don’t care about others these derivatives are called **partial derivatives**.**
+In the case of **a univariate function**, it is simply the **first derivative at a selected point**. In the case of **a multivariate function**, it is a **vector of derivatives** in each main direction (along variable axes). Because we are interested only in a slope along one axis and we don’t care about others these derivatives are called **partial derivatives**.
 
 **`Learning rate`**
 
@@ -2233,9 +2331,9 @@ Since we are considering just one example at a time the cost will fluctuate over
 
 <img src="imgs/Screen Shot 2022-08-12 at 1.18.06 PM.png" alt="Screen Shot 2022-08-12 at 1.18.06 PM" height = "30%" width = "30%"/>
 
-Also because the cost is so fluctuating, it will never reach the minima but it will keep dancing around it.
+Also because the cost is so fluctuating, it **will never reach the minima** but it will keep dancing around it.
 
-SGD can be used for larger datasets. It converges faster when the dataset is large as it causes updates to the parameters more frequently.
+SGD can be used for **larger datasets**. It converges faster when the dataset is large as it causes updates to the parameters more frequently.
 
 ### Mini Batch GD
 
