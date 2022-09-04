@@ -246,6 +246,15 @@ pipe.score(X_test, y_test)
 #Call transform of each transformer in the pipeline. The transformed data are finally passed to the final estimator that calls score method. Only valid if the final estimator implements score.
 ```
 
+
+
+#### Summary : What can we do to deal with data leakage
+
+1. Remove features that contain information about the target that normally won't be available during inference
+2. Have a separate validation dataset to check the model performance while training
+3. use k-fold cv when data is less
+4. Normalized training data separately and then use those parameters for the test dataset
+
 <br>
 
 ## Transformations
@@ -1863,6 +1872,8 @@ $$
 https://towardsdatascience.com/dimensionality-reduction-for-machine-learning-80a46c2ebb7e
 
 https://towardsdatascience.com/11-dimensionality-reduction-techniques-you-should-know-in-2021-dcb9500d388b
+
+<img src="imgs/Screen Shot 2022-08-30 at 10.38.52 AM.png" alt="Screen Shot 2022-08-30 at 10.38.52 AM" height = "70%" width = "70%" />
 
 # Model Evaluation
 
