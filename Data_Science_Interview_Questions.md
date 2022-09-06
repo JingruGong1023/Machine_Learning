@@ -16,7 +16,7 @@
 
    rescale the data/features to put them into range [0,1]
 
-3. What are different types of feature scaling?**
+3. **What are different types of feature scaling?**
 
 ​		Standarization, MinMaxScaler, RobustScaler, Normalizer
 
@@ -24,21 +24,41 @@
 
 5. **What models need standarization/rescaling?**
 
-6. **What is data leakage and How do we correct it?**
+6. **What models don't need standarization/rescaling?**
 
-7. **Ways to Encode Categorical Features. Cons and Pros**
+7. **What is data leakage and How do we correct it?**
 
-8. **What is Discretization**
+8. **Ways to Encode Categorical Features. Cons and Pros**
 
-9. **Should we always remove missing values?**
+9. **What models must encode categorical features first, what models don't**
 
-10. **Why can't we just simply drop missing values?**
+10. **What do we do when we have different number of unique categories in test and train sets? when we deal with feature encoding?**
 
-11. **What is KNN imputer**
+11. **What is Target-based encoding, what is the disadvantage?**
 
-12. **How do you handle outliers in your dataset**
+    we use a single variable to encode the response
 
-13. **What is Isolation Forests and how it works?**
+    Regression-> average; binary -> fraction; multi-class-> fraction
+
+    Cons: may lead to data leakage, use with regularization to solve
+
+12. **What is Discretization**
+
+13. **Should we always remove missing values?**
+
+14. **Why can't we just simply drop missing values?**
+
+15. **What is simple imputer, and what are the drawbacks?**
+
+16. **How to impute categorical data with simple imputer**
+
+17. **What is iterative imputer**
+
+18. **What is KNN imputer**
+
+19. **How do you handle outliers in your dataset**
+
+20. **What is Isolation Forests and how it works?**
 
     similar as random forest, built based on decision trees. And It is built on the fact the outliers are few and different. We identify the outliers by choosing the samples ending up in shorter branches which indicate it was easier for the tree to separate them from other observations. 
 
@@ -54,41 +74,65 @@
 
 3. **What is L2 Regression assumption**
 
-4. **What is L1 Regression, what's the difference with L2**
+4. **Will Linear regression with L1 regularization be affected by multi-linearity?**
 
-5. **If we want to reduce number of features , which one to choose, L1,L2?**
+   No
+
+5. **What is L1 Regression, what's the difference with L2**
+
+6. **If we want to reduce number of features , which one to choose, L1,L2 and Why?**
 
    Lasso
 
-6. **What is ElasticNet, and how is it related to Lasso and Ridge?**
+7. **What is ElasticNet, and how is it related to Lasso and Ridge?**
 
-7. **What are the assumptions for linear regression?**
+​	L2 helps generalization, L1 helps makes some features' weights to zero
+
+1. **What are the assumptions for linear regression?**
 
    - Linear relationship between independent and dependent variable
    - error terms constance varaince
    - error term follows normal distribution
    - no correlation among error terms
 
-8. **What is VIF , and what is its cutoff value?**
+2. **Does these assumptions for linear regression also apply to Logistic regression?** No
+
+3. **What does F stat test?**
+
+   F-stat is used to test whether there is relationship between any of the predictors and response
+
+4. **What is VIF , and what is its cutoff value?**
 
    Check Multilinearity, 10
 
-9. **Model evaluation metrics for Linear Regression**
+5. **Model evaluation metrics for Linear Regression**
 
    - MSE/MAE, MAE more robust to outliers
    - R^2 /Adjusted R2
 
-10. **What is Logistic Regression, pro and cons?**
+6. **Why use absolute/squared value in MAE and MSE?**
 
-11. **Why not use MSE in Logistic?**
+7. **Compare MAE, MSE, RMSE**
 
-12. **Why log odds can predict probability?**
+8. **What does R2 measures, and what does 0 and 1 mean**
+
+9. **When can R2 be misleading?**
+
+10. **why do we use adjusted R2? and it will only increase in which situationw**
+
+11. **What is Logistic Regression, pro and cons?**
+
+12. **Why not use MSE in Logistic?**
+
+13. **MLE assumes data follow which distribution**
+
+14. **Why log odds can predict probability?**
 
     because it used sigmoid function, basically squashed linear function $w^Tx$ between [0,1]
 
-13. **Difference and similarity between logistic and linear regression**
+15. **Difference and similarity between logistic and linear regression**
 
-14. **Difference between SVM and Logistic Regression**
+16. **Difference between SVM and Logistic Regression**
 
     SVM tries to find the best margin that separates the classes and this reduce the risk of error on data, while logistic regression have different decision boundaries on different weights
 
@@ -96,87 +140,248 @@
 
     The risk of over fitting is less on SVM 
 
-15. **What is KNN and how it's working?**
+17. **What is KNN and how it's working?**
 
-16. **What's the difference between K-means and KNN?**
+18. **Does KNN has any assumption for the data distribution?** No
 
-    KNN represents a supervised classification algorithm that will give new data points accordingly to the k number or the closest data points, while k-means clustering is an unsupervised clustering algorithm that gathers and groups data into k number of clusters.
+19. **What is Manhattan distance, Euclidean distance and hamming distance**
 
-17. **How to choose K value in KNN**
+    Manhattan distance: sum of abs(a-b)
 
-    small k: complicate model, overfitting
+    Euclidean distance : sqrt of sum (a-b)^2
 
-    Large k: simple model, underfitting
+    Hamming distance : count of the differences between two vectors
+
+20. **How to choose k value in KNN**
+
+​		k too large : simple model, underfitting, high bias
+
+​		k too small : complex model, overfitting, high variance
+
+​		usually use square root of n, or use cv to choose the optimal k
+
+18. **Why dimension reduction is often applied prior to KNN?**
+
+​		For high-dimensional data, information is lost through equidistant vectors
+
+19. **What's the difference between K-means and KNN?**
+
+​		KNN represents a supervised classification algorithm that will give new data points accordingly to the k number or the 			closest data points, while k-means clustering is an unsupervised clustering algorithm that gathers and groups data into k number of clusters.
+
+20. **How to choose K value in KNN**
+
+​		small k: complicate model, overfitting
+
+​		Large k: simple model, underfitting
 
 </br>
 
 ## Trees
 
 1. **How the tree will be split in decision trees ?**
-2. **Why trees don't need standarization**
 
-because scale of data won't affect how the trees be splited, in another word, it won't affect the ranking
+2. **Why do non-tree models, such as Adaboost, SVM, LR, KNN, KMeans need standarization?**
+
+   For linear model, when feature values varies too much, the gradient descent is hard to converge
+
+3. **Why trees don't need standarization**
+
+​		because scale of data won't affect how the trees be splited, in another word, it won't affect the ranking
 
 3. **What's the problem with DT?**
 
-4. **What is ensemble Learning and what types are there?**
+4. **Is DT linear or nonlinear**
 
-5. **What is bootstrap, and how it works**
+5. **What is ensemble Learning and what types are there?**
 
-6. **How can bootstrap improve model**
+6. **What is bootstrap, and how it works**
 
-7. **What is Random Forest and how it works? Pro and Cons**
+7. **Which versions of trees can deal with both categorical variable and missing? which versions can only deal with missing**
 
-8. **How to tune Random Forest?**
+   1. Lightgbm, catboost
+   2. xgBoost
 
-   1. Max_features
-   2. Pre_prune
+8. **What is ID3, what's the problem with it**
 
-9. **What is the diffference and similarity between Out-of-Bag score and CV score**
+   information gain, the smaller h, the more pure for X. ID3 prefer feature with more levels, such as ID. no matter which id is chosen, the leaf will have high purity, -> overfitting
 
-10. **What is Boosting, and what are the common algorithms using boosting**
+9. **What is Gain Ratio, how does it solve the problem ID3 caused?**
 
-11. **What is Gradient Boosting , and how it works**
+   $Gain\ ration = information \ gain/entropy$
 
-12. **Compare Gradient Boosting with Adaboosting**
+   $information \ gain = entropy \ before \ splitting \ - \  entropy \ after \ splitting $
 
-13. **What are the advantages and disadvantages of GBDT**
+10. **What is Gini index, how does it work?**
 
-14. **How to tune GBDT**
+    gini index = 1- sum(p^2), p is the probability of each class
 
-15. **What are the differences and similarities between Random Forest and GBDT**
+11. **How to calculate Entropy index/information gain**
 
-16. **What is XGBoost**
+    $Entropy = -\sum_j{p_j*log2(p_j)}$
 
-17. **When do you want to use Trees instead of Linear Models**
+12. **What are the impurity criterias for Regression tree and classification tree respectively**
 
-18. **How trees are pruned?**
+13. **what is the impurity index of entropy and impurity index of gini coefficients respectively, with classes with the same probability**
 
-    https://medium.com/analytics-vidhya/post-pruning-and-pre-pruning-in-decision-tree-561f3df73e65
+    Entropy = 1, gini = 0.5
 
-18. **Feature Importance**
-19. 
+14. **Increase which hyperparameters will make RF overfit**
+
+    1. depth of trees
+    2. Max number of features used
+
+15. **Can we mix feature types in one tree? can we have the same features appear multiple times**
+
+    yes, yes
+
+16. **How to calculate the feature importance in tree?**
+
+    Feature importance is calculated as **the decrease in node impurity weighted by the probability of reaching that node**.
+
+17. **What is the difference between generalization and extrapolation**
+
+    For `generalization`, usually you make this `IID` assumption that you draw **data from the same distribution**, and you have    some samples from the distribution from which you learn, and other samples from a distribution which you want to predict.
+
+    For `extrapolation`, the distribution that I want to try to predict on was actually different from the distribution I learned on because they’re completely disjoint
+
+18. **How can bootstrap improve model**
+
+19. **What is Random Forest and how it works? Pro and Cons**
+
+20. **How does RF introduce randomness?**
+    A. by creating boostrap samples
+    B. by selecting a random subset of features for each tree
+
+21. **Will tree model be affected by multi-linearity?**
+
+    no
+
+22. **Which aspect of random forest uses bagging?**
+
+    1. each tree is trained with random sample of the data
+    2. each tree is trained with a subset of features
+
+23. **How does random forest acieves model independend**
+
+24. **What does proximity means in RF?**
+
+    The term `proximity` means the closeness or nearness between pairs of cases
+
+25. **How to randomize RF?**
+
+    Row sampling & Column sampling: use bagging to make samples randomized
+
+26. **How to tune Random Forest?**
+
+    Max_features : which is the max number of features you want to look at each split -> too many feature might cause overfitting
+
+    n_estimators: the number of trees you want to build before making decisions -> too few trees might cause overfitting
+
+    Pre_prune : by setting max depth, max leaf_nodes, and min sample splits -> too deep might cause overfitting
+
+27. **What is the diffference and similarity between Out-of-Bag score and CV score**
+
+28. **What is Boosting, and what are the common algorithms using boosting**
+
+29. **What is Gradient Boosting , and how it works**
+
+30. **Compare Gradient Boosting with Adaboosting**
+
+31. **What are the advantages and disadvantages of GBDT**
+
+32. **How to tune GBDT**
+
+33. **What are the differences and similarities between Random Forest and GBDT**
+
+    GBDT: faster in prediction, slower in training, more accurate , shallower trees, smaller model size, more sensitive to outliers
+
+    GBDT is calculated by combining and learning from multiple trees, RF is by most votes
+
+34. **Why is GBDT is faster in prediction. How to deal with slow training in GBDT**
+
+    because **prediction can happen in parallel**, over all the trees + each tree in GBDT is usually much shallower than each tree in RF, and thus faster in traversal
+
+    we can use XGBoost to optimize
+
+35. **What is XGBoost**
+
+36. **When do you want to use Trees instead of Linear Models**
+
+37. **How trees are pruned?**
+
+https://medium.com/analytics-vidhya/post-pruning-and-pre-pruning-in-decision-tree-561f3df73e65
+
+26. **Feature Importance**
+
+27. **Why GBDT is more accurate then RF**
+
+    随机森林是减少模型的方差(Variance)-> reduce overfitting，而GBDT是减少模型的偏差(Bias)-> reduce underfitting. That's why GBDT has high accuracy 
+
+28. **When do you not want to use Tree based models**
+
+    high dimensional data/unstructured data -> NN works better
+
+29. **Tree Symmetry style for CatBoost, LightGBM and xgBoost**
+
+    Catboost: symmetric
+
+    LightGBM, xgBoost: asymmetric
+
+30. **Splitting method for CatBoost, LightGBM and xgBoost**
+
+31. **Do CatBoost, LightGBM and xgBoost need feature encoding?**
+
+32. **How do CatBoost, LightGBM and xgBoost deal with missing values**
+
+
 
 </br>
 
 ## Model Evaluation
 
 1. **What are the common metrics for Binary Classification**
+
 2. **What does Precision and recall mean? why do we need F1 score?**
+
 3. **What is Precision-Recall curve, which point is the best**
+
 4. **What is ROC, AUC, which point is the best**
-5. **What are the common metrics for multi-class classification**
-6. **What are the common metrics for regression**
-7. **What is imbalanced data, and what  are the two sources of them**
-8. **Two basic approaches in dealing with imbalanced data**
-9. **what is SMOTE**
-10. **How cross-validation works**
-11. **What is bias , what does it mean to have high bias**
-12. **What is variance ,  what does it mean to have high variance**
-13. **What is bayesian error**
-14. **what is the total error of a model**
-15. **How to trade off variance and bias**
-16. 
+
+5. **Threshold based method**
+
+   Accuracy, precision, recall, f1
+
+6. **What are the common metrics for multi-class classification**
+
+7. **Averaging strategies in metrics for Multi-class classification**
+
+   Macro, micro, weighted
+
+8. **Ranking based method**
+
+   ROC AUC
+
+9. **What are the common metrics for regression**
+
+10. **What is imbalanced data, and what  are the two sources of them**
+
+11. **Two basic approaches in dealing with imbalanced data**
+
+12. **what is SMOTE**
+
+13. **How cross-validation works**
+
+14. **What is bias , what does it mean to have high bias**
+
+15. **What is variance ,  what does it mean to have high variance**
+
+16. **What is bayesian error**
+
+17. **what is the total error of a model**
+
+18. **How to trade off variance and bias**
+
+19. **How to calculate the feature importance separately in Regressions and CART**
 
 </br>
 
@@ -244,7 +449,13 @@ because scale of data won't affect how the trees be splited, in another word, it
 6. **PCA calculation details**
 7. 
 
+</br>
 
+## Deep Learning basics
+
+1. What is the difference between ndarray and tensor
+
+   they are very similar, the most obvious difference is tensor can run on GPU
 
 
 
