@@ -132,7 +132,7 @@
   - [Other methods](#other-methods)
   - [Synthetic Minority Oversampling Technique (SMOTE)](#synthetic-minority-oversampling-technique-smote)
     - [Overeview](#overeview-11)
-- [Optimization](#Optimization)
+- [Optimization]([#Optimization](https://github.com/JingruGong1023/MLE-AS-interview/blob/main/Optimization.md))
 
 
 <br>
